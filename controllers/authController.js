@@ -1,0 +1,106 @@
+const bcrypt = require("bcrypt");
+const User = require("../models/User.js");
+const { generateToken } = require("../utils/jwt.js");
+
+exports.login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: "Email and password are required" });
+    }
+
+    const user = await User.findOne({ where: { email } });
+
+    if (!user || !user.isActive) {
+      return res.status(401).json({ success: false, message: "Invalid email or password" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: "Invalid email or password" });
+    }
+
+    const token = generateToken(user);
+
+    res.json({
+      success: true,
+      message: "Login successful",
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ success: false, message: "Login failed", error: err.message });
+  }
+};
+
+exports.getMe = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id, {
+      attributes: { exclude: ["password"] },
+    });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    res.json({ success: true, user });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.create = async (req, res) => {
+  try {
+    const { name, email, password, role } = req.body;
+
+    const existing = await User.findOne({ where: { email } });
+    if (existing) {
+      return res.status(400).json({ success: false, message: "User with this email already exists" });
+    }
+
+    const user = await User.create({
+      name: name || "Admin",
+      email: email || "admin@example.com",
+      password: password || "Admin@123",
+      role: role || "admin",
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Admin user created successfully",
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (err) {
+    console.error("User creation failed:", err);
+    res.status(500).json({ success: false, message: "Failed to create user", error: err.message });
+  }
+};
+
+exports.seedDefaultAdmin = async (req, res) => {
+  try {
+    let admin = await User.findOne({ where: { role: "admin" } });
+    if (!admin) {
+      admin = await User.create({
+        name: "ParakshTech Admin",
+        email: "admin@parakshtech.com",
+        password: "Admin@123",
+        role: "admin",
+      });
+      return res.json({ success: true, message: "Default admin seeded", email: admin.email });
+    }
+    res.json({ success: true, message: "Admin user already exists", email: admin.email });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};

@@ -1,0 +1,6 @@
+{
+  "security": {
+    "jwtSecret": "very_strong_secret_key",
+    "jwtExpiresIn": "7d"
+  }
+}
