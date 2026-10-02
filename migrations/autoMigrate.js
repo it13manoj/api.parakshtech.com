@@ -512,6 +512,38 @@ async function seedBaselineData() {
   } else {
     console.log(`  ✓ Portfolio items verified (${portfolioCount} existing)`);
   }
+
+  // 7. Contact Inquiries: Migrate any legacy constactus records into contact_inquiries
+  try {
+    const [legacyRecords] = await sequelize.query("SELECT * FROM constactus");
+    if (Array.isArray(legacyRecords) && legacyRecords.length > 0) {
+      let migratedCount = 0;
+      for (const rec of legacyRecords) {
+        if (!rec.email || !rec.contents) continue;
+        const exists = await ContactInquiry.findOne({
+          where: { email: rec.email, contents: rec.contents },
+        });
+        if (!exists) {
+          await ContactInquiry.create({
+            name: rec.name || "Website Lead",
+            email: rec.email,
+            phone: null,
+            subject: "Website Contact Message",
+            contents: rec.contents,
+            status: "new",
+            createdAt: rec.createdAt || new Date(),
+            updatedAt: rec.updatedAt || new Date(),
+          });
+          migratedCount++;
+        }
+      }
+      if (migratedCount > 0) {
+        console.log(`  ✓ Migrated ${migratedCount} legacy contact messages into contact_inquiries`);
+      }
+    }
+  } catch (e) {
+    // Ignore if legacy table is absent
+  }
 }
 
 /**

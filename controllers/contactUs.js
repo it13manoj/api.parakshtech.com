@@ -1,10 +1,12 @@
 const ContactUs = require("../models/contact");
+const ContactInquiry = require("../models/ContactInquiry");
 
 exports.createContact = async (req, res) => {
   try {
-    const { name, email, contents } = req.body;
+    const { name, email, phone, subject, contents, message } = req.body;
+    const messageContent = contents || message || "";
 
-    if (!name || !email || !contents) {
+    if (!name || !email || !messageContent) {
       return res.status(400).json({
         success: false,
         message: "All fields are required",
@@ -14,8 +16,21 @@ exports.createContact = async (req, res) => {
     const contact = await ContactUs.create({
       name,
       email,
-      contents,
+      contents: messageContent,
     });
+
+    try {
+      await ContactInquiry.create({
+        name,
+        email,
+        phone: phone || null,
+        subject: subject || "General Inquiry",
+        contents: messageContent,
+        status: "new",
+      });
+    } catch (e) {
+      console.warn("Could not mirror to ContactInquiry:", e.message);
+    }
 
     res.status(201).json({
       success: true,
