@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require("express");
+const multer = require("multer");
 const app = express();
 const http = require("http");
 const cors = require("cors");
@@ -301,6 +302,29 @@ app.get("/api/v1/admin/system/schema-status", authMiddleware, async (req, res) =
   } catch (err) {
     res.status(500).json({ success: false, message: "Diagnostic failed", error: err.message });
   }
+});
+
+
+// Global error handling middleware (catches MulterError and any other unhandled errors)
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError || (err && err.name === "MulterError")) {
+    console.error("Multer Error Handled:", err);
+    return res.status(400).json({
+      success: false,
+      message: `File upload error: ${err.message}${err.field ? ` in field '${err.field}'` : ""}`,
+      code: err.code,
+    });
+  }
+
+  if (err) {
+    console.error("Unhandled Server Error:", err);
+    return res.status(err.status || 500).json({
+      success: false,
+      message: err.message || "An unexpected error occurred",
+    });
+  }
+
+  next();
 });
 
 // -------------------- SERVER INITIALIZATION ----------------------------

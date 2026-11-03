@@ -59,6 +59,8 @@ exports.createTeam = async (req, res) => {
     const body = { ...req.body };
     if (req.file) {
       body.image = req.file.filename;
+    } else if (req.files && req.files.length > 0) {
+      body.image = req.files[0].filename;
     }
     body.social = parseField(body.social, { linkedin: "", github: "", twitter: "" });
 
@@ -89,6 +91,8 @@ exports.updateTeam = async (req, res) => {
     const body = { ...req.body };
     if (req.file) {
       body.image = req.file.filename;
+    } else if (req.files && req.files.length > 0) {
+      body.image = req.files[0].filename;
     }
     if (body.social) body.social = parseField(body.social, member.social);
 

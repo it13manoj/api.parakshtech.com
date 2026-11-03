@@ -2,7 +2,7 @@ const Home = require("../models/home/home.js");
 const { Op, fn, col, where } = require("sequelize");
 exports.homeHero = async (req, res) => {
     try {
-        req.body.images = req?.file?.filename
+        req.body.images = req?.file?.filename || (req?.files && req.files.length > 0 ? req.files[0].filename : undefined)
         const homeData = await Home.create(req.body);
 
         res.status(201).json({
@@ -30,7 +30,8 @@ exports.uploadimage = async (req, res) => {
         // Return JSON format CKEditor expects
         const protocol = req.protocol; // http or https
         const host = req.get("host"); // domain or localhost:port
-        const imageUrl = `${protocol}://${host}/api/v1/uploads/${req.file.filename}`;
+        const uploadedFilename = req?.file?.filename || (req?.files && req.files.length > 0 ? req.files[0].filename : "");
+        const imageUrl = `${protocol}://${host}/api/v1/uploads/${uploadedFilename}`;
 
         res.json({ url: imageUrl });
     } catch (error) {

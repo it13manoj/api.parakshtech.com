@@ -103,6 +103,8 @@ exports.createService = async (req, res) => {
 
     if (req.file) {
       body.images = req.file.filename;
+    } else if (req.files && req.files.length > 0) {
+      body.images = req.files[0].filename;
     }
 
     body.features = parseField(body.features, []);
@@ -136,6 +138,8 @@ exports.updateService = async (req, res) => {
 
     if (req.file) {
       body.images = req.file.filename;
+    } else if (req.files && req.files.length > 0) {
+      body.images = req.files[0].filename;
     }
 
     if (body.title && !body.slug) {

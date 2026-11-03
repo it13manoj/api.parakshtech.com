@@ -21,13 +21,13 @@ router.get("/admin/portfolio", authMiddleware, getAdminPortfolio);
 router.post(
   "/admin/portfolio",
   authMiddleware,
-  upload.array("images", 10), // Accept up to 10 project images
+  upload.array("images", 50), // Accept up to 10 project images
   createPortfolio
 );
 router.put(
   "/admin/portfolio/:id",
   authMiddleware,
-  upload.array("images", 10),
+  upload.array("images", 50),
   updatePortfolio
 );
 router.delete("/admin/portfolio/:id", authMiddleware, deletePortfolio);
